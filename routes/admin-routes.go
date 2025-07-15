@@ -1,10 +1,14 @@
 package routes
 
 import (
+	"telemed/controllers"
+	"telemed/middleware"
 	"telemed/responses"
 
 	"github.com/gofiber/fiber/v2"
 )
+
+var adminController controllers.AdminController
 
 const (
 	Admin = "admin"
@@ -12,7 +16,9 @@ const (
 
 func AdminRoutes(app *fiber.App) {
 	api := app.Group("/admin")
-	api.Get("/", roleMiddleware(Admin))
+	api.Use(middleware.JWTProtected())
+	api.Post("/Login", roleMiddleware(Admin), adminController.Login)
+	api.Post("/otp", roleMiddleware(Admin), adminController.VerifyOTP)
 }
 
 func roleMiddleware(allowedRoles ...string) fiber.Handler {

@@ -6,7 +6,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var _ = godotenv.Load(".env")
+var _ = godotenv.Load("dev.env")
 
 type DbConfig struct {
 	Host     string
@@ -25,3 +25,6 @@ func Db() DbConfig {
 }
 
 var GatewaySecret = os.Getenv("GATEWAY_SECRET")
+var AppPassword = os.Getenv("APP_PASSWORD")
+var AppEmail = os.Getenv("APP_EMAIL")
+var JwtSecret = os.Getenv("JWT_SECRET")

@@ -43,5 +43,14 @@ func SquadResponse(c *fiber.Ctx, reference, description string, statusCode int) 
 }
 
 const (
-	UNAUTHORIZED_ACCESS = "unauthorized access"
+	UNAUTHORIZED_ACCESS  = "unauthorized access"
+	BAD_DATA             = "invalid data"
+	INCOMPLETE_DATA      = "incomplete data"
+	LOGIN_SUCCESSFUL     = "login successful"
+	OTP_SENT             = "otp has been sent to your email"
+	ACCOUNT_NON_EXISTENT = "admin account does not exist"
+	INVALID_PASSWORD     = "invalid password"
+	ACCOUNT_CREATED      = "account created successfully"
+	OTP_VERIFIED         = "otp verified successfully"
+	SOMETHING_WRONG      = "something went wrong, please try again later"
 )
