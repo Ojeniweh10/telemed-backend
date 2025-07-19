@@ -44,3 +44,48 @@ func (AdminController) VerifyOTP(c *fiber.Ctx) error {
 	}
 	return responses.SuccessResponse(c, responses.OTP_VERIFIED, res, 200)
 }
+
+func (AdminController) ForgotPassword(c *fiber.Ctx) error {
+	var payload models.ForgotPassword
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.Email == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.ForgotPassword(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.OTP_SENT, res, 200)
+}
+
+func (AdminController) VerifyPwdOTP(c *fiber.Ctx) error {
+	var payload models.VerifyPwdOTP
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.OTP == "" || payload.Email == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.VerifyPwdOTP(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.OTP_VERIFIED, res, 200)
+}
+
+func (AdminController) ResetPassword(c *fiber.Ctx) error {
+	var payload models.ResetPassword
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.Email == "" || payload.NewPassword == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.ResetPassword(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.PASSWORD_RESET_SUCCESS, res, 200)
+}

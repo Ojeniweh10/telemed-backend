@@ -2,7 +2,6 @@ package routes
 
 import (
 	"telemed/controllers"
-	"telemed/middleware"
 	"telemed/responses"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,9 +15,12 @@ const (
 
 func AdminRoutes(app *fiber.App) {
 	api := app.Group("/admin")
-	api.Use(middleware.JWTProtected())
 	api.Post("/Login", roleMiddleware(Admin), adminController.Login)
 	api.Post("/otp", roleMiddleware(Admin), adminController.VerifyOTP)
+	api.Post("/forgot-password", roleMiddleware(Admin), adminController.ForgotPassword)
+	api.Post("/verify-forgot-password-otp", roleMiddleware(Admin), adminController.VerifyPwdOTP)
+	api.Post("/reset-password", roleMiddleware(Admin), adminController.ResetPassword)
+	//api.Get("/get-all-users", roleMiddleware(Admin),middleware.JWTProtected(), adminController.GetAllUsers)
 }
 
 func roleMiddleware(allowedRoles ...string) fiber.Handler {

@@ -36,7 +36,7 @@ func (AdminServer) Login(data models.Adminlogin) (any, error) {
 		log.Println("Failed to generate OTP:", err)
 		return nil, errors.New("failed to generate OTP")
 	}
-	_, err = Db.Exec(Ctx, "UPDATE users SET otp = $1, otp_expiry = NOW() WHERE email = $2", otp, data.Email)
+	_, err = Db.Exec(Ctx, "UPDATE users SET otp = $1, otp_expiry = NOW()+ INTERVAL '5 minutes' WHERE email = $2", otp, data.Email)
 	if err != nil {
 		log.Println("failed to save OTP", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -65,8 +65,7 @@ func (AdminServer) VerifyOTP(data models.OTPVerify) (any, error) {
 		return nil, errors.New("invalid OTP")
 	}
 
-	minutes := time.Since(otpExpiryTime).Minutes()
-	if minutes > 10 {
+	if time.Now().After(otpExpiryTime) {
 		log.Println("OTP has expired")
 		return nil, errors.New("OTP has expired")
 	}
@@ -80,5 +79,95 @@ func (AdminServer) VerifyOTP(data models.OTPVerify) (any, error) {
 	return map[string]interface{}{
 		"message": "Login successful",
 		"token":   token,
+	}, nil
+}
+
+func (AdminServer) ForgotPassword(data models.ForgotPassword) (any, error) {
+	var exists string
+	err := Db.QueryRow(Ctx, "SELECT email FROM users WHERE email = $1 AND role = 'admin'", data.Email).Scan(&exists)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New(responses.ACCOUNT_NON_EXISTENT)
+	}
+
+	otp, err := utils.GenerateOTP()
+	if err != nil {
+		log.Println("Failed to generate OTP:", err)
+		return nil, errors.New("failed to generate OTP")
+	}
+
+	_, err = Db.Exec(Ctx, "UPDATE users SET otp = $1, otp_expiry = NOW() + INTERVAL '10 minutes' WHERE email = $2", otp, data.Email)
+	if err != nil {
+		log.Println("failed to save OTP", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	err = utils.SendEmailOTP(data.Email, otp)
+	if err != nil {
+		log.Println("Failed to send OTP email:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return nil, err
+}
+
+func (AdminServer) VerifyPwdOTP(data models.VerifyPwdOTP) (any, error) {
+	var dbOtp string
+	var otpExpiryTime time.Time
+	var role string
+
+	err := Db.QueryRow(Ctx, "SELECT otp, otp_expiry, role FROM users WHERE email = $1", data.Email).
+		Scan(&dbOtp, &otpExpiryTime, &role)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("invalid email or OTP")
+	}
+
+	if role != "admin" {
+		log.Println("Not an admin account")
+		return nil, errors.New("unauthorized")
+	}
+
+	if data.OTP != dbOtp {
+		log.Println("Invalid OTP for admin")
+		return nil, errors.New("invalid OTP")
+	}
+
+	if time.Now().After(otpExpiryTime) {
+		log.Println("OTP has expired")
+		return nil, errors.New("OTP has expired")
+	}
+
+	return map[string]interface{}{
+		"message": "OTP verified successfully",
+	}, nil
+}
+
+func (AdminServer) ResetPassword(data models.ResetPassword) (any, error) {
+	var exists string
+	err := Db.QueryRow(Ctx, "SELECT email FROM users WHERE email = $1 AND role = 'admin'", data.Email).Scan(&exists)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New(responses.ACCOUNT_NON_EXISTENT)
+	}
+
+	if data.NewPassword == "" {
+		return nil, errors.New(responses.INCOMPLETE_DATA)
+	}
+
+	hashedPwd, err := utils.HashPassword(data.NewPassword)
+	if err != nil {
+		log.Println("Failed to hash password:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	_, err = Db.Exec(Ctx, "UPDATE users SET password = $1 WHERE email = $2", hashedPwd, data.Email)
+	if err != nil {
+		log.Println("Failed to reset password:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return map[string]interface{}{
+		"message": responses.PASSWORD_RESET_SUCCESS,
 	}, nil
 }
