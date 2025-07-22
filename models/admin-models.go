@@ -27,3 +27,18 @@ type ResetPassword struct {
 	Email       string `json:"email"`
 	NewPassword string `json:"new_password"`
 }
+
+type AnalyticsReq struct {
+	Metric string `json:"metric"`
+	Month  string `json:"month"`
+	Year   string `json:"year"`
+}
+
+type AnalyticsResp struct {
+	Metric          string  `json:"metric"`
+	Month           string  `json:"month"`
+	Year            string  `json:"year"`
+	Total_amount    float64 `json:"total_amount"`
+	Payment_count   int     `json:"payment_count"`
+	Average_payment float64 `json:"average_payment"`
+}

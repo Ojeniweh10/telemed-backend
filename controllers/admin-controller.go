@@ -89,3 +89,27 @@ func (AdminController) ResetPassword(c *fiber.Ctx) error {
 	}
 	return responses.SuccessResponse(c, responses.PASSWORD_RESET_SUCCESS, res, 200)
 }
+func (AdminController) FetchDashboardSummary(c *fiber.Ctx) error {
+	res, err := adminServer.GetDashboardSummary()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+func (AdminController) FetchAnalytics(c *fiber.Ctx) error {
+	var data models.AnalyticsReq
+	data.Metric = c.Query("metric")
+	data.Month = c.Query("month")
+	data.Year = c.Query("year")
+
+	if data.Metric == "" || data.Month == "" || data.Year == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+
+	res, err := adminServer.GetAnalytics(data)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+
+}
