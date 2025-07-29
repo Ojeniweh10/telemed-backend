@@ -20,7 +20,7 @@ var Db *pgxpool.Pool
 func (AdminServer) Login(data models.Adminlogin) (any, error) {
 	var hash string
 	var admin models.AdminLoginResponse
-	err := Db.QueryRow(Ctx, "SELECT password, usertag FROM users WHERE email = $1 AND role = 'admin'", data.Email).Scan(&hash, &admin.Usertag)
+	err := Db.QueryRow(Ctx, "SELECT password, admintag FROM admins WHERE email = $1", data.Email).Scan(&hash, &admin.Usertag)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.New(responses.ACCOUNT_NON_EXISTENT)
@@ -36,7 +36,7 @@ func (AdminServer) Login(data models.Adminlogin) (any, error) {
 		log.Println("Failed to generate OTP:", err)
 		return nil, errors.New("failed to generate OTP")
 	}
-	_, err = Db.Exec(Ctx, "UPDATE users SET otp = $1, otp_expiry = NOW()+ INTERVAL '5 minutes' WHERE email = $2", otp, data.Email)
+	_, err = Db.Exec(Ctx, "UPDATE admins SET otp = $1, otp_expiry = NOW()+ INTERVAL '5 minutes' WHERE email = $2", otp, data.Email)
 	if err != nil {
 		log.Println("failed to save OTP", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -52,9 +52,8 @@ func (AdminServer) Login(data models.Adminlogin) (any, error) {
 
 func (AdminServer) VerifyOTP(data models.OTPVerify) (any, error) {
 	var dbOtp string
-	var role string
 	var otpExpiryTime time.Time
-	err := Db.QueryRow(Ctx, "SELECT otp, otp_expiry, role FROM users WHERE usertag = $1", data.Usertag).Scan(&dbOtp, &otpExpiryTime, &role)
+	err := Db.QueryRow(Ctx, "SELECT otp, otp_expiry, role FROM admins WHERE admintag = $1", data.Usertag).Scan(&dbOtp, &otpExpiryTime)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.New("invalid email or OTP")
@@ -69,12 +68,12 @@ func (AdminServer) VerifyOTP(data models.OTPVerify) (any, error) {
 		log.Println("OTP has expired")
 		return nil, errors.New("OTP has expired")
 	}
-	_, err = Db.Exec(Ctx, `UPDATE users SET otp = NULL, otp_expiry = NULL WHERE usertag = $1`, data.Usertag)
+	_, err = Db.Exec(Ctx, `UPDATE admins SET otp = NULL, otp_expiry = NULL WHERE admintag = $1`, data.Usertag)
 	if err != nil {
 		log.Println("Failed to clear OTP:", err)
 	}
 
-	token, err := utils.GenerateJWT(data.Usertag, role)
+	token, err := utils.GenerateJWT(data.Usertag)
 	if err != nil {
 		log.Println("Failed to generate JWT token:", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -88,7 +87,7 @@ func (AdminServer) VerifyOTP(data models.OTPVerify) (any, error) {
 
 func (AdminServer) ForgotPassword(data models.ForgotPassword) (any, error) {
 	var exists string
-	err := Db.QueryRow(Ctx, "SELECT email FROM users WHERE email = $1 AND role = 'admin'", data.Email).Scan(&exists)
+	err := Db.QueryRow(Ctx, "SELECT email FROM admins WHERE email = $1", data.Email).Scan(&exists)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.New(responses.ACCOUNT_NON_EXISTENT)
@@ -100,7 +99,7 @@ func (AdminServer) ForgotPassword(data models.ForgotPassword) (any, error) {
 		return nil, errors.New("failed to generate OTP")
 	}
 
-	_, err = Db.Exec(Ctx, "UPDATE users SET otp = $1, otp_expiry = NOW() + INTERVAL '10 minutes' WHERE email = $2", otp, data.Email)
+	_, err = Db.Exec(Ctx, "UPDATE admins SET otp = $1, otp_expiry = NOW() + INTERVAL '10 minutes' WHERE email = $2", otp, data.Email)
 	if err != nil {
 		log.Println("failed to save OTP", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -118,18 +117,12 @@ func (AdminServer) ForgotPassword(data models.ForgotPassword) (any, error) {
 func (AdminServer) VerifyPwdOTP(data models.VerifyPwdOTP) (any, error) {
 	var dbOtp string
 	var otpExpiryTime time.Time
-	var role string
 
-	err := Db.QueryRow(Ctx, "SELECT otp, otp_expiry, role FROM users WHERE email = $1", data.Email).
-		Scan(&dbOtp, &otpExpiryTime, &role)
+	err := Db.QueryRow(Ctx, "SELECT otp, otp_expiry FROM admins WHERE email = $1", data.Email).
+		Scan(&dbOtp, &otpExpiryTime)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.New("invalid email or OTP")
-	}
-
-	if role != "admin" {
-		log.Println("Not an admin account")
-		return nil, errors.New("unauthorized")
 	}
 
 	if data.OTP != dbOtp {
@@ -141,7 +134,7 @@ func (AdminServer) VerifyPwdOTP(data models.VerifyPwdOTP) (any, error) {
 		log.Println("OTP has expired")
 		return nil, errors.New("OTP has expired")
 	}
-	_, err = Db.Exec(Ctx, `UPDATE users SET otp = NULL, otp_expiry = NULL WHERE email = $1`, data.Email)
+	_, err = Db.Exec(Ctx, `UPDATE admins SET otp = NULL, otp_expiry = NULL WHERE email = $1`, data.Email)
 	if err != nil {
 		log.Println("Failed to clear OTP:", err)
 	}
@@ -153,7 +146,7 @@ func (AdminServer) VerifyPwdOTP(data models.VerifyPwdOTP) (any, error) {
 
 func (AdminServer) ResetPassword(data models.ResetPassword) (any, error) {
 	var exists string
-	err := Db.QueryRow(Ctx, "SELECT email FROM users WHERE email = $1 AND role = 'admin'", data.Email).Scan(&exists)
+	err := Db.QueryRow(Ctx, "SELECT email FROM admins WHERE email = $1", data.Email).Scan(&exists)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.New(responses.ACCOUNT_NON_EXISTENT)
@@ -169,7 +162,7 @@ func (AdminServer) ResetPassword(data models.ResetPassword) (any, error) {
 		return nil, errors.New(responses.SOMETHING_WRONG)
 	}
 
-	_, err = Db.Exec(Ctx, "UPDATE users SET password = $1 WHERE email = $2", hashedPwd, data.Email)
+	_, err = Db.Exec(Ctx, "UPDATE admins SET password = $1 WHERE email = $2", hashedPwd, data.Email)
 	if err != nil {
 		log.Println("Failed to reset password:", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -249,4 +242,121 @@ func getPaymentAnalytics(month, year string) (any, error) {
 	analytics.Average_payment = average
 
 	return analytics, nil
+}
+
+func (AdminServer) GetAppointments() (any, error) {
+	var appointments []models.Appointment
+
+	rows, err := Db.Query(Ctx, "SELECT appointment_id, patient_tag, doctor_tag, scheduled_at, reason, file_url FROM appointments")
+	if err != nil {
+		log.Println("Failed to fetch appointments:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var appointment models.Appointment
+		if err := rows.Scan(&appointment.ID, &appointment.UserTag, &appointment.DoctorTag, &appointment.Scheduled_at, &appointment.Reason, &appointment.Fileurl, &appointment.Status, &appointment.Created_at); err != nil {
+			log.Println("Failed to scan appointment:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		appointments = append(appointments, appointment)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over appointments:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return appointments, nil
+}
+
+func (AdminServer) GetAppointmentByID(payload models.AppointmentID) (any, error) {
+	var data models.AppointmentIDResp
+
+	query := `
+		SELECT a.patient_tag, a.doctor_tag, a.scheduled_at, a.reason, a.file_url, a.status, a.created_at,
+		       u.firstname, u.lastname, u.phone_no, u.gender, u.date_of_birth,
+		       d.fullname, d.price_per_session
+		FROM appointments a
+		JOIN users u ON a.patient_tag = u.usertag
+		JOIN doctors d ON a.doctor_tag = d.doctortag
+		WHERE a.appointment_id = $1
+	`
+
+	err := Db.QueryRow(Ctx, query, payload.ID).Scan(
+		&data.UserTag,
+		&data.DoctorTag,
+		&data.Scheduled_At,
+		&data.Reason,
+		&data.File_URL,
+		&data.Status,
+		&data.Created_At,
+		&data.First_name,
+		&data.Last_name,
+		&data.Phone_No,
+		&data.Gender,
+		&data.Dob,
+		&data.Doctor_Fullname,
+		&data.Price,
+	)
+
+	if err != nil {
+		log.Println("Failed to fetch full appointment details:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return data, nil
+}
+
+func (AdminServer) GetDoctorByFullname(data models.Doctorreq) (any, error) {
+	var doctor models.Doctor
+
+	query := `
+	SELECT 
+		d.doctortag,
+		d.fullname,
+		d.date_of_birth,
+		d.phone_number,
+		d.gender,
+		d.specialization,
+		d.country,
+		d.city,
+		d.yrs_of_experience,
+		d.price_per_session,
+		d.about,
+		d.availability,
+		d.profile_pic_url,
+		h.name AS hospital_affiliation
+	FROM doctors d
+	LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+	WHERE d.fullname = $1
+	`
+
+	err := Db.QueryRow(Ctx, query, data).Scan(
+		&doctor.DoctorTag,
+		&doctor.FullName,
+		&doctor.Dob,
+		&doctor.Phone_no,
+		&doctor.Gender,
+		&doctor.Specialization,
+		&doctor.Country,
+		&doctor.City,
+		&doctor.YearsOfExperience,
+		&doctor.Price,
+		&doctor.About,
+		&doctor.Availability,
+		&doctor.ProfilePicURL,
+		&doctor.HospitalAffiliation, // ← from hospitals.name
+	)
+
+	if err != nil {
+		log.Println("Error fetching doctor by fullname:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("Doctor not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return doctor, nil
 }

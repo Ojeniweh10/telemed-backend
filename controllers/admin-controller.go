@@ -113,3 +113,41 @@ func (AdminController) FetchAnalytics(c *fiber.Ctx) error {
 	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
 
 }
+
+func (AdminController) FetchAppointments(c *fiber.Ctx) error {
+	res, err := adminServer.GetAppointments()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchAppointmentByID(c *fiber.Ctx) error {
+	var payload models.AppointmentID
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.ID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetAppointmentByID(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchDoctorbyName(c *fiber.Ctx) error {
+	var payload models.Doctorreq
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.Fullname == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetDoctorByFullname(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}

@@ -57,7 +57,7 @@ func SendEmailOTP(Email, otp string) error {
 	return err
 }
 
-func GenerateJWT(usertag, role string) (string, error) {
+func GenerateJWT(usertag string) (string, error) {
 	secret := config.JwtSecret
 	if secret == "" {
 		return "", errors.New("no secret key found")
@@ -65,7 +65,6 @@ func GenerateJWT(usertag, role string) (string, error) {
 
 	claims := jwt.MapClaims{
 		"usertag": usertag,
-		"role":    role,
 		"exp":     time.Now().Add(1 * time.Hour).Unix(),
 	}
 
