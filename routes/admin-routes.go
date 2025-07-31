@@ -28,7 +28,10 @@ func AdminRoutes(app *fiber.App) {
 	//appointments
 	api.Get("/appointments", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchAppointments)
 	api.Post("/appointments/:id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchAppointmentByID)
-
+	api.Patch("/appointments/:id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateAppointmentStatus)
+	api.Put("/appointments/:id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateAppointment)
+	//doctors
+	api.Get("/doctors", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchDoctors)
 }
 
 func roleMiddleware(allowedRoles ...string) fiber.Handler {

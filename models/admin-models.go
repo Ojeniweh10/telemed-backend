@@ -114,3 +114,13 @@ type Doctor struct {
 	ProfilePicURL       string         `json:"profile_pic_url"`
 	HospitalAffiliation string         `json:"hospital_affiliation"` // from hospital.name
 }
+
+type UpdateAppointmentStatus struct {
+	Status         string `json:"status"`
+	Appointment_id string `json:"appointment_id"`
+}
+
+type RescheduleAppointmentReq struct {
+	Appointment_id string `json:"appointment_id"`
+	NewScheduledAt string `json:"new_scheduled_at"`
+}

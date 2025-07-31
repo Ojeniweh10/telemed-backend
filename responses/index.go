@@ -55,4 +55,5 @@ const (
 	SOMETHING_WRONG        = "something went wrong, please try again later"
 	PASSWORD_RESET_SUCCESS = "password reset successfully"
 	DATA_FETCHED           = "data fetched successfully"
+	DATA_UPDATED           = "data updated successfully"
 )

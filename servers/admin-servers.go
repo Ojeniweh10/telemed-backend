@@ -353,10 +353,77 @@ func (AdminServer) GetDoctorByFullname(data models.Doctorreq) (any, error) {
 	if err != nil {
 		log.Println("Error fetching doctor by fullname:", err)
 		if err.Error() == "no rows in result set" {
-			return nil, errors.New("Doctor not found")
+			return nil, errors.New("doctor not found")
 		}
 		return nil, errors.New(responses.SOMETHING_WRONG)
 	}
 
 	return doctor, nil
+}
+
+func (AdminServer) UpdateAppointmentStatus(payload models.UpdateAppointmentStatus) (any, error) {
+	switch payload.Status {
+	case "cancel":
+		_, err := Db.Exec(Ctx, "UPDATE appointments SET status = 'cancelled' WHERE appointment_id = $2", payload.Status, payload.Appointment_id)
+		if err != nil {
+			log.Println("Failed to update appointment status:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		return map[string]string{"message": "Appointment cancelled successfully"}, nil
+	case "completed":
+		_, err := Db.Exec(Ctx, "UPDATE appointments SET status = 'completed' WHERE appointment_id = $2", payload.Status, payload.Appointment_id)
+		if err != nil {
+			log.Println("Failed to update appointment status:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		return map[string]string{"message": "Appointment completed successfully"}, nil
+	case "pending":
+		_, err := Db.Exec(Ctx, "UPDATE appointments SET status = 'pending' WHERE appointment_id = $2", payload.Status, payload.Appointment_id)
+		if err != nil {
+			log.Println("Failed to update appointment status:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		return map[string]string{"message": "Appointment status updated to pending"}, nil
+	default:
+		return nil, errors.New("invalid appointment status")
+	}
+}
+
+func (a *AdminServer) RescheduleAppointment(data models.RescheduleAppointmentReq) (any, error) {
+	_, err := time.Parse(time.RFC3339, data.NewScheduledAt)
+	if err != nil {
+		return errors.New("invalid datetime format"), nil
+	}
+	query := `UPDATE appointments SET scheduled_at = $1 WHERE appointment_id = $2`
+	_, err = Db.Exec(Ctx, query, data.NewScheduledAt, data.Appointment_id)
+	if err != nil {
+		log.Println("Error updating appointment schedule:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return map[string]string{"message": "Appointment rescheduled successfully"}, nil
+}
+
+func (AdminServer) GetDoctors() (any, error) {
+	var doctors []models.Doctor
+
+	rows, err := Db.Query(Ctx, "SELECT doctortag, fullname, date_of_birth, phone_number, gender, specialization, country, yrs_of_experience, price_per_session FROM doctors")
+	if err != nil {
+		log.Println("Failed to fetch doctors:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var doctor models.Doctor
+		if err := rows.Scan(&doctor.DoctorTag, &doctor.FullName, &doctor.Dob, &doctor.Phone_no, &doctor.Gender, &doctor.Specialization, &doctor.Country, &doctor.YearsOfExperience, &doctor.Price); err != nil {
+			log.Println("Failed to scan doctor:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		doctors = append(doctors, doctor)
+	}
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over doctors:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return doctors, nil
 }

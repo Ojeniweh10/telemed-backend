@@ -151,3 +151,46 @@ func (AdminController) FetchDoctorbyName(c *fiber.Ctx) error {
 	}
 	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
 }
+
+func (AdminController) UpdateAppointmentStatus(c *fiber.Ctx) error {
+	var payload models.UpdateAppointmentStatus
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.Appointment_id = c.Params("id")
+	if payload.Appointment_id == "" || payload.Status == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdateAppointmentStatus(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (a *AdminController) UpdateAppointment(c *fiber.Ctx) error {
+	var payload models.RescheduleAppointmentReq
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+
+	payload.Appointment_id = c.Params("id")
+	if payload.Appointment_id == "" || payload.NewScheduledAt == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+
+	res, err := adminServer.RescheduleAppointment(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (AdminController) FetchDoctors(c *fiber.Ctx) error {
+	res, err := adminServer.GetDoctors()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
