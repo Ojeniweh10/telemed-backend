@@ -95,7 +95,7 @@ type AppointmentIDResp struct {
 }
 
 type Doctorreq struct {
-	Fullname string `json:"fullname"`
+	DoctorTag string
 }
 
 type Doctor struct {
@@ -123,4 +123,30 @@ type UpdateAppointmentStatus struct {
 type RescheduleAppointmentReq struct {
 	Appointment_id string `json:"appointment_id"`
 	NewScheduledAt string `json:"new_scheduled_at"`
+}
+
+type Patient struct {
+	UserTag   string `json:"usertag"`
+	Firstname string `json:"firstname"`
+	Lastname  string `json:"lastname"`
+	Email     string `json:"email"`
+	Phone_no  string `json:"phone_no"`
+	Gender    string `json:"gender"`
+	Dob       string `json:"dob"`
+}
+
+type PatientIdReq struct {
+	Usertag string
+}
+
+type PatientIdResp struct {
+	UserTag          string `json:"usertag"`
+	Name             string `json:"name"`
+	Phone_No         string `json:"phone_no"`
+	Gender           string `json:"gender"`
+	Dob              string `json:"dob"`
+	Reason           string `json:"reason"`
+	Attending_Doctor string `json:"attending_doctor"`
+	File_URL         string `json:"file_url"`
+	Status           string `json:"status"`
 }

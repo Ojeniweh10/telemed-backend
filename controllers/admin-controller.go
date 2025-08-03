@@ -137,15 +137,13 @@ func (AdminController) FetchAppointmentByID(c *fiber.Ctx) error {
 	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
 }
 
-func (AdminController) FetchDoctorbyName(c *fiber.Ctx) error {
+func (AdminController) FetchDoctorByID(c *fiber.Ctx) error {
 	var payload models.Doctorreq
-	if err := c.BodyParser(&payload); err != nil {
-		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
-	}
-	if payload.Fullname == "" {
+	payload.DoctorTag = c.Params("id")
+	if payload.DoctorTag == "" {
 		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
 	}
-	res, err := adminServer.GetDoctorByFullname(payload)
+	res, err := adminServer.GetDoctorByID(payload)
 	if err != nil {
 		return responses.ErrorResponse(c, err.Error(), 400)
 	}
@@ -189,6 +187,38 @@ func (a *AdminController) UpdateAppointment(c *fiber.Ctx) error {
 
 func (AdminController) FetchDoctors(c *fiber.Ctx) error {
 	res, err := adminServer.GetDoctors()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) DeleteDoctor(c *fiber.Ctx) error {
+	var payload models.Doctorreq
+	payload.DoctorTag = c.Params("id")
+	if payload.DoctorTag == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeleteDoctor(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+
+func (AdminController) FetchPatients(c *fiber.Ctx) error {
+	res, err := adminServer.GetPatients()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchPatientByUsertag(c *fiber.Ctx) error {
+	var payload models.PatientIdReq
+	payload.Usertag = c.Params("usertag")
+
+	res, err := adminServer.GetPatientByUsertag(payload)
 	if err != nil {
 		return responses.ErrorResponse(c, err.Error(), 400)
 	}

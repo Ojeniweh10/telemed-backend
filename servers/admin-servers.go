@@ -245,6 +245,7 @@ func getPaymentAnalytics(month, year string) (any, error) {
 }
 
 func (AdminServer) GetAppointments() (any, error) {
+	//rememmebr to modify to fetch using filters
 	var appointments []models.Appointment
 
 	rows, err := Db.Query(Ctx, "SELECT appointment_id, patient_tag, doctor_tag, scheduled_at, reason, file_url FROM appointments")
@@ -309,7 +310,7 @@ func (AdminServer) GetAppointmentByID(payload models.AppointmentID) (any, error)
 	return data, nil
 }
 
-func (AdminServer) GetDoctorByFullname(data models.Doctorreq) (any, error) {
+func (AdminServer) GetDoctorByID(data models.Doctorreq) (any, error) {
 	var doctor models.Doctor
 
 	query := `
@@ -405,6 +406,7 @@ func (a *AdminServer) RescheduleAppointment(data models.RescheduleAppointmentReq
 }
 
 func (AdminServer) GetDoctors() (any, error) {
+	//rememmebr to modify to fetch using filters
 	var doctors []models.Doctor
 
 	rows, err := Db.Query(Ctx, "SELECT doctortag, fullname, date_of_birth, phone_number, gender, specialization, country, yrs_of_experience, price_per_session FROM doctors")
@@ -426,4 +428,60 @@ func (AdminServer) GetDoctors() (any, error) {
 		return nil, errors.New(responses.SOMETHING_WRONG)
 	}
 	return doctors, nil
+}
+
+func (AdminServer) DeleteDoctor(data models.Doctorreq) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM doctors WHERE doctortag = $1", data.DoctorTag)
+	if err != nil {
+		log.Println("Failed to delete doctor:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}
+
+func (AdminServer) GetPatients() (any, error) {
+	var patients []models.Patient
+
+	rows, err := Db.Query(Ctx, "SELECT usertag, firstname, lastname, email, phone_no, gender, date_of_birth FROM users WHERE role = 'user'")
+	if err != nil {
+		log.Println("Failed to fetch patients:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var patient models.Patient
+		if err := rows.Scan(&patient.UserTag, &patient.Firstname, &patient.Lastname, &patient.Email, &patient.Phone_no, &patient.Gender, &patient.Dob); err != nil {
+			log.Println("Failed to scan patient:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		patients = append(patients, patient)
+	}
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over patients:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return patients, nil
+}
+
+func (AdminServer) GetPatientByUsertag(data models.PatientIdReq) (any, error) {
+	var patient models.PatientIdResp
+	var firstname, lastname string
+
+	query1 := `select u.usertag, u.firstname, u.lastname, u.phone_no, u.gender, u.date_of_birth , ap.doctor_tag, ap.reason, ap.file_url, ap.status
+				from users AS u
+				inner join appointments AS ap
+				on u.usertag = ap.patient_tag
+				where usertag = $1 `
+	err := Db.QueryRow(Ctx, query1, data.Usertag).Scan(&patient.UserTag, &firstname, &lastname, &patient.Phone_No, &patient.Gender, &patient.Dob, &patient.Attending_Doctor, &patient.Reason, &patient.File_URL, &patient.Status)
+	if err != nil {
+		log.Println("Failed to fetch patient:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("patient not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	patient.Name = firstname + " " + lastname
+
+	return patient, nil
+
 }
