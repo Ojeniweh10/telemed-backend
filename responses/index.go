@@ -56,4 +56,5 @@ const (
 	PASSWORD_RESET_SUCCESS = "password reset successfully"
 	DATA_FETCHED           = "data fetched successfully"
 	DATA_UPDATED           = "data updated successfully"
+	DATA_CREATED           = "data created successfully"
 )

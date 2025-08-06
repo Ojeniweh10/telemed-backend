@@ -37,6 +37,27 @@ func AdminRoutes(app *fiber.App) {
 	//patients
 	api.Get("/patients", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchPatients)
 	api.Get("/patients/:usertag", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchPatientByUsertag)
+	api.Delete("/patients/:usertag", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeletePatient)
+	api.Patch("/patients/:usertag", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.EditPatient)
+	//pharmacy
+	api.Get("/pharmacy", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchPharmacy)
+	api.Get("/pharmacy/:pharmacy_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchPharmacyByID)
+	api.Post("/pharmacy", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.CreatePharmacy)
+	api.Delete("/pharmacy/:pharmacy_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeletePharmacy)
+	api.Patch("/pharmacy/:pharmacy_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdatePharmacy)
+	//hospitals
+	api.Get("/hospitals", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchHospitals)
+	api.Get("/hospitals/:hospital_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchHospitalByID)
+	api.Post("/hospitals", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.CreateHospital)
+	api.Delete("/hospitals/:hospital_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeleteHospital)
+	api.Patch("/hospitals/:hospital_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateHospital)
+	//inventory
+	api.Get("/inventory", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchInventory)
+	api.Get("/inventory/:inventory_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchInventoryByID)
+	api.Post("/inventory", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.CreateInventory)
+	api.Delete("/inventory/:inventory_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeleteInventory)
+	api.Patch("/inventory/:inventory_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateInventory)
+	//users
 }
 
 func roleMiddleware(allowedRoles ...string) fiber.Handler {

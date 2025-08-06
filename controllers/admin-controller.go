@@ -224,3 +224,220 @@ func (AdminController) FetchPatientByUsertag(c *fiber.Ctx) error {
 	}
 	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
 }
+
+func (AdminController) DeletePatient(c *fiber.Ctx) error {
+	var payload models.PatientIdReq
+	payload.Usertag = c.Params("usertag")
+	if payload.Usertag == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeletePatient(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+
+func (AdminController) EditPatient(c *fiber.Ctx) error {
+	var payload models.Patient
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.UserTag = c.Params("usertag")
+	if payload.UserTag == "" || payload.Firstname == "" || payload.Lastname == "" || payload.Phone_no == "" || payload.Dob == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.EditPatient(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (AdminController) FetchPharmacy(c *fiber.Ctx) error {
+	res, err := adminServer.GetPharmacy()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) CreatePharmacy(c *fiber.Ctx) error {
+	var payload models.Pharmacy
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.PharmacyName == "" || payload.Address == "" || payload.Country == "" || payload.State == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.CreatePharmacy(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_CREATED, res, 201)
+}
+
+func (AdminController) DeletePharmacy(c *fiber.Ctx) error {
+	pharmacyID := c.Params("pharmacy_id")
+	if pharmacyID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeletePharmacy(pharmacyID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+
+func (AdminController) FetchPharmacyByID(c *fiber.Ctx) error {
+	pharmacyID := c.Params("pharmacy_id")
+	if pharmacyID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetPharmacyByID(pharmacyID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) UpdatePharmacy(c *fiber.Ctx) error {
+	var payload models.Pharmacy
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.PharmacyID = c.Params("pharmacy_id")
+	if payload.PharmacyID == "" || payload.PharmacyName == "" || payload.Address == "" || payload.Country == "" || payload.State == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdatePharmacy(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (AdminController) FetchHospitals(c *fiber.Ctx) error {
+	res, err := adminServer.GetHospitals()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) CreateHospital(c *fiber.Ctx) error {
+	var payload models.Hospital
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.HospitalName == "" || payload.Address == "" || payload.Country == "" || payload.State == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.CreateHospital(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_CREATED, res, 201)
+}
+
+func (AdminController) FetchHospitalByID(c *fiber.Ctx) error {
+	hospitalID := c.Params("hospital_id")
+	if hospitalID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetHospitalByID(hospitalID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) DeleteHospital(c *fiber.Ctx) error {
+	hospitalID := c.Params("hospital_id")
+	if hospitalID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeleteHospital(hospitalID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+func (AdminController) UpdateHospital(c *fiber.Ctx) error {
+	var payload models.Hospital
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.HospitalID = c.Params("hospital_id")
+	if payload.HospitalID == "" || payload.HospitalName == "" || payload.Address == "" || payload.Country == "" || payload.State == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdateHospital(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (AdminController) FetchInventory(c *fiber.Ctx) error {
+	res, err := adminServer.GetInventory()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchInventoryByID(c *fiber.Ctx) error {
+	inventoryID := c.Params("inventory_id")
+	if inventoryID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetInventoryByID(inventoryID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) CreateInventory(c *fiber.Ctx) error {
+	var payload models.Inventory
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.ProductName == "" || payload.Milligrams == "" || payload.Price == 0 {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.CreateInventory(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_CREATED, res, 201)
+}
+
+func (AdminController) DeleteInventory(c *fiber.Ctx) error {
+	inventoryID := c.Params("inventory_id")
+	if inventoryID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeleteInventory(inventoryID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+
+func (AdminController) UpdateInventory(c *fiber.Ctx) error {
+	var payload models.Inventory
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.ProductID = c.Params("inventory_id")
+	if payload.ProductID == "" || payload.ProductName == "" || payload.Milligrams == "" || payload.Price == 0 {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdateInventory(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}

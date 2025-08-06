@@ -485,3 +485,241 @@ func (AdminServer) GetPatientByUsertag(data models.PatientIdReq) (any, error) {
 	return patient, nil
 
 }
+
+func (AdminServer) DeletePatient(data models.PatientIdReq) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM users WHERE usertag = $1", data.Usertag)
+	if err != nil {
+		log.Println("Failed to delete patient:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}
+
+func (AdminServer) EditPatient(data models.Patient) (any, error) {
+	if data.UserTag == "" || data.Firstname == "" || data.Lastname == "" || data.Phone_no == "" || data.Dob == "" {
+		return nil, errors.New(responses.INCOMPLETE_DATA)
+	}
+
+	query := `UPDATE users SET firstname = $1, lastname = $2, phone_no = $3, date_of_birth = $4 WHERE usertag = $5`
+	_, err := Db.Exec(Ctx, query, data.Firstname, data.Lastname, data.Phone_no, data.Dob, data.UserTag)
+	if err != nil {
+		log.Println("Failed to update patient:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Patient updated successfully"}, nil
+}
+
+func (AdminServer) GetPharmacy() (any, error) {
+	var pharmacies []models.Pharmacy
+
+	rows, err := Db.Query(Ctx, "SELECT pharmacy_id, pharmacy_name, address, country, state, about, picture_url FROM pharmacies")
+	if err != nil {
+		log.Println("Failed to fetch pharmacies:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var pharmacy models.Pharmacy
+		if err := rows.Scan(&pharmacy.PharmacyID, &pharmacy.PharmacyName, &pharmacy.Address, &pharmacy.Country, &pharmacy.State, &pharmacy.About, &pharmacy.Picture_url); err != nil {
+			log.Println("Failed to scan pharmacy:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		pharmacies = append(pharmacies, pharmacy)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over pharmacies:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return pharmacies, nil
+}
+
+func (AdminServer) CreatePharmacy(data models.Pharmacy) (any, error) {
+	query := `INSERT INTO pharmacies (pharmacy_name, address, country, state, about, picture_url) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := Db.Exec(Ctx, query, data.PharmacyName, data.Address, data.Country, data.State, data.About, data.Picture_url)
+	if err != nil {
+		log.Println("Failed to create pharmacy:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return map[string]string{"message": "Pharmacy created successfully"}, nil
+}
+
+func (AdminServer) DeletePharmacy(pharmacyID string) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM pharmacies WHERE pharmacy_id = $1", pharmacyID)
+	if err != nil {
+		log.Println("Failed to delete pharmacy:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}
+
+func (AdminServer) GetPharmacyByID(pharmacyID string) (any, error) {
+	var pharmacy models.Pharmacy
+	err := Db.QueryRow(Ctx, "SELECT pharmacy_id, pharmacy_name, address, country, state, about, picture_url FROM pharmacies WHERE pharmacy_id = $1", pharmacyID).
+		Scan(&pharmacy.PharmacyID, &pharmacy.PharmacyName, &pharmacy.Address, &pharmacy.Country, &pharmacy.State, &pharmacy.About, &pharmacy.Picture_url)
+	if err != nil {
+		log.Println("Failed to fetch pharmacy by ID:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("pharmacy not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return pharmacy, nil
+}
+
+func (AdminServer) UpdatePharmacy(payload models.Pharmacy) (any, error) {
+	query := `UPDATE pharmacies SET pharmacy_name = $1, address = $2, country = $3, state = $4, about = $5, picture_url = $6 WHERE pharmacy_id = $7`
+	_, err := Db.Exec(Ctx, query, payload.PharmacyName, payload.Address, payload.Country, payload.State, payload.About, payload.Picture_url, payload.PharmacyID)
+	if err != nil {
+		log.Println("Failed to update pharmacy:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Pharmacy updated successfully"}, nil
+}
+
+func (AdminServer) GetHospitals() (any, error) {
+	var hospitals []models.Hospital
+
+	rows, err := Db.Query(Ctx, "SELECT hospital_id, hospital_name, address, country, state, about, picture_url FROM hospitals")
+	if err != nil {
+		log.Println("Failed to fetch hospitals:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var hospital models.Hospital
+		if err := rows.Scan(&hospital.HospitalID, &hospital.HospitalName, &hospital.Address, &hospital.Country, &hospital.State, &hospital.About, &hospital.Picture_url); err != nil {
+			log.Println("Failed to scan hospital:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		hospitals = append(hospitals, hospital)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over hospitals:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return hospitals, nil
+}
+
+func (AdminServer) CreateHospital(data models.Hospital) (any, error) {
+	query := `INSERT INTO hospitals (hospital_name, address, country, state, about, picture_url) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := Db.Exec(Ctx, query, data.HospitalName, data.Address, data.Country, data.State, data.About, data.Picture_url)
+	if err != nil {
+		log.Println("Failed to create hospital:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return map[string]string{"message": "Hospital created successfully"}, nil
+}
+
+func (AdminServer) DeleteHospital(hospitalID string) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM hospitals WHERE hospital_id = $1", hospitalID)
+	if err != nil {
+		log.Println("Failed to delete hospital:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}
+
+func (AdminServer) GetHospitalByID(hospitalID string) (any, error) {
+	var hospital models.Hospital
+	err := Db.QueryRow(Ctx, "SELECT hospital_id, hospital_name, address, country, state, about, picture_url FROM hospitals WHERE hospital_id = $1", hospitalID).
+		Scan(&hospital.HospitalID, &hospital.HospitalName, &hospital.Address, &hospital.Country, &hospital.State, &hospital.About, &hospital.Picture_url)
+	if err != nil {
+		log.Println("Failed to fetch hospital by ID:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("hospital not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return hospital, nil
+}
+
+func (AdminServer) UpdateHospital(payload models.Hospital) (any, error) {
+	query := `UPDATE hospitals SET hospital_name = $1, address = $2, country = $3, state = $4, about = $5, picture_url = $6 WHERE hospital_id = $7`
+	_, err := Db.Exec(Ctx, query, payload.HospitalName, payload.Address, payload.Country, payload.State, payload.About, payload.Picture_url, payload.HospitalID)
+	if err != nil {
+		log.Println("Failed to update hospital:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Hospital updated successfully"}, nil
+}
+
+func (AdminServer) GetInventory() (any, error) {
+	var inventory []models.Inventory
+
+	rows, err := Db.Query(Ctx, "SELECT product_id, name, milligram, price, product_image_url FROM inventory")
+	if err != nil {
+		log.Println("Failed to fetch inventory:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item models.Inventory
+		if err := rows.Scan(&item.ProductID, &item.ProductName, &item.Milligrams, &item.Price, &item.Product_image_url); err != nil {
+			log.Println("Failed to scan inventory item:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		inventory = append(inventory, item)
+	}
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over inventory:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return inventory, nil
+}
+
+func (AdminServer) GetInventoryByID(productID string) (any, error) {
+	var item models.Inventory
+	err := Db.QueryRow(Ctx, "SELECT product_id, name, milligram, price, product_image_url FROM inventory WHERE product_id = $1", productID).
+		Scan(&item.ProductID, &item.ProductName, &item.Milligrams, &item.Price, &item.Product_image_url)
+	if err != nil {
+		log.Println("Failed to fetch inventory item by ID:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("inventory item not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return item, nil
+}
+
+func (AdminServer) CreateInventory(data models.Inventory) (any, error) {
+	data.ProductID = utils.GenerateUUID(data.ProductName) // Generate a unique ID based on product name
+	query := `INSERT INTO inventory ( product_id, name, milligram, price, product_image_url) VALUES ($1, $2, $3, $4)`
+	_, err := Db.Exec(Ctx, query, data.ProductID, data.ProductName, data.Milligrams, data.Price, data.Product_image_url)
+	if err != nil {
+		log.Println("Failed to create inventory item:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return map[string]string{"message": "Inventory item created successfully"}, nil
+}
+
+func (AdminServer) UpdateInventory(payload models.Inventory) (any, error) {
+	query := `UPDATE inventory SET name = $1, milligram = $2, price = $3, product_image_url = $4 WHERE product_id = $5`
+	_, err := Db.Exec(Ctx, query, payload.ProductName, payload.Milligrams, payload.Price, payload.Product_image_url, payload.ProductID)
+	if err != nil {
+		log.Println("Failed to update inventory item:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Inventory item updated successfully"}, nil
+}
+
+func (AdminServer) DeleteInventory(productID string) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM inventory WHERE product_id = $1", productID)
+	if err != nil {
+		log.Println("Failed to delete inventory item:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}

@@ -140,13 +140,41 @@ type PatientIdReq struct {
 }
 
 type PatientIdResp struct {
-	UserTag          string `json:"usertag"`
-	Name             string `json:"name"`
-	Phone_No         string `json:"phone_no"`
-	Gender           string `json:"gender"`
-	Dob              string `json:"dob"`
-	Reason           string `json:"reason"`
-	Attending_Doctor string `json:"attending_doctor"`
-	File_URL         string `json:"file_url"`
-	Status           string `json:"status"`
+	UserTag          string         `json:"usertag"`
+	Name             string         `json:"name"`
+	Phone_No         string         `json:"phone_no"`
+	Gender           string         `json:"gender"`
+	Dob              datatypes.Date `json:"dob"`
+	Reason           string         `json:"reason"`
+	Attending_Doctor string         `json:"attending_doctor"`
+	File_URL         string         `json:"file_url"`
+	Status           string         `json:"status"`
+}
+
+type Pharmacy struct {
+	PharmacyID   string `json:"pharmacy_id"`
+	PharmacyName string `json:"pharmacy_name"`
+	Address      string `json:"address"`
+	Country      string `json:"country"`
+	State        string `json:"state"`
+	About        string `json:"about"`
+	Picture_url  string `json:"picture_url"`
+}
+
+type Hospital struct {
+	HospitalID   string `json:"hospital_id"`
+	HospitalName string `json:"hospital_name"`
+	Address      string `json:"address"`
+	Country      string `json:"country"`
+	State        string `json:"state"`
+	About        string `json:"about"`
+	Picture_url  string `json:"picture_url"`
+}
+
+type Inventory struct {
+	ProductID         string  `json:"product_id"`
+	ProductName       string  `json:"product_name"`
+	Milligrams        string  `json:"milligrams"`
+	Price             float64 `json:"price"`
+	Product_image_url string  `json:"product_image_url"`
 }
