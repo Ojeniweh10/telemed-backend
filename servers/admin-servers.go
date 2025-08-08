@@ -537,8 +537,9 @@ func (AdminServer) GetPharmacy() (any, error) {
 }
 
 func (AdminServer) CreatePharmacy(data models.Pharmacy) (any, error) {
-	query := `INSERT INTO pharmacies (pharmacy_name, address, country, state, about, picture_url) VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := Db.Exec(Ctx, query, data.PharmacyName, data.Address, data.Country, data.State, data.About, data.Picture_url)
+	data.PharmacyID = utils.GenerateUUID(data.PharmacyID)
+	query := `INSERT INTO pharmacies (pharmacy_id, pharmacy_name, address, country, state, about, picture_url) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := Db.Exec(Ctx, query, data.PharmacyID, data.PharmacyName, data.Address, data.Country, data.State, data.About, data.Picture_url)
 	if err != nil {
 		log.Println("Failed to create pharmacy:", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -609,8 +610,9 @@ func (AdminServer) GetHospitals() (any, error) {
 }
 
 func (AdminServer) CreateHospital(data models.Hospital) (any, error) {
-	query := `INSERT INTO hospitals (hospital_name, address, country, state, about, picture_url) VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := Db.Exec(Ctx, query, data.HospitalName, data.Address, data.Country, data.State, data.About, data.Picture_url)
+	data.HospitalID = utils.GenerateUUID(data.HospitalName)
+	query := `INSERT INTO hospitals (hospital_id, hospital_name, address, country, state, about, picture_url) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := Db.Exec(Ctx, query, data.HospitalID, data.HospitalName, data.Address, data.Country, data.State, data.About, data.Picture_url)
 	if err != nil {
 		log.Println("Failed to create hospital:", err)
 		return nil, errors.New(responses.SOMETHING_WRONG)
@@ -723,3 +725,206 @@ func (AdminServer) DeleteInventory(productID string) error {
 	}
 	return nil
 }
+
+func (AdminServer) GetOrders() (any, error) {
+	var orders []models.Orders
+
+	rows, err := Db.Query(Ctx, "SELECT order_id, usertag, item_name, quantity, status FROM orders")
+	if err != nil {
+		log.Println("Failed to fetch orders:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var order models.Orders
+		if err := rows.Scan(&order.OrderID, &order.UserTag, &order.ItemName, &order.Quantity, &order.Status); err != nil {
+			log.Println("Failed to scan order:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		orders = append(orders, order)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over orders:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return orders, nil
+}
+
+func (AdminServer) GetOrderByID(orderID string) (any, error) {
+	var order models.Orders
+	err := Db.QueryRow(Ctx, "SELECT order_id, usertag, item_name, quantity, status FROM orders WHERE order_id = $1", orderID).
+		Scan(&order.OrderID, &order.UserTag, &order.ItemName, &order.Quantity, &order.Status)
+	if err != nil {
+		log.Println("Failed to fetch order by ID:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("order not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return order, nil
+}
+
+func (AdminServer) UpdateOrder(order models.Orders) (any, error) {
+	query := `UPDATE orders SET usertag = $1, item_name = $2, quantity = $3, status = $4 WHERE order_id = $5`
+	_, err := Db.Exec(Ctx, query, order.UserTag, order.ItemName, order.Quantity, order.Status, order.OrderID)
+	if err != nil {
+		log.Println("Failed to update order:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Order updated successfully"}, nil
+}
+
+func (AdminServer) GetTestCenters() (any, error) {
+	var testCenters []models.TestCentre
+
+	rows, err := Db.Query(Ctx, "SELECT center_id, name, address, country, state, daily_capacity,  about, availability, test_types, price_per_test FROM test_centers")
+	if err != nil {
+		log.Println("Failed to fetch test centers:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var center models.TestCentre
+		if err := rows.Scan(&center.CentreID, &center.CentreName, &center.Address, &center.Country, &center.State, &center.DailyCapacity, &center.About, &center.Availability, &center.TestType, &center.Price); err != nil {
+			log.Println("Failed to scan test center:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		testCenters = append(testCenters, center)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over test centers:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return testCenters, nil
+}
+
+func (AdminServer) GetTestCenterByID(centerID string) (any, error) {
+	var center models.TestCentre
+	err := Db.QueryRow(Ctx, "SELECT center_id, name, address, country, state, daily_capacity, about, availability, test_types, price_per_test FROM test_centers WHERE center_id = $1", centerID).
+		Scan(&center.CentreID, &center.CentreName, &center.Address, &center.Country, &center.State, &center.DailyCapacity, &center.About, &center.Availability, &center.TestType, &center.Price)
+	if err != nil {
+		log.Println("Failed to fetch test center by ID:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("test center not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return center, nil
+}
+
+func (AdminServer) CreateTestCenter(data models.TestCentre) (any, error) {
+	data.CentreID = utils.GenerateUUID(data.CentreName) // Generate a unique ID based on center name
+	query := `INSERT INTO test_centers (center_id, name, address, country, state, daily_capacity, about, availability, test_types, price_per_test) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	_, err := Db.Exec(Ctx, query, data.CentreID, data.CentreName, data.Address, data.Country, data.State, data.DailyCapacity, data.About, data.Availability, data.TestType, data.Price)
+	if err != nil {
+		log.Println("Failed to create test center:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return map[string]string{"message": "Test center created successfully"}, nil
+}
+
+func (AdminServer) DeleteTestCenter(centerID string) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM test_centers WHERE center_id = $1", centerID)
+	if err != nil {
+		log.Println("Failed to delete test center:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}
+
+func (AdminServer) UpdateTestCenter(payload models.TestCentre) (any, error) {
+	query := `UPDATE test_centers SET name = $1, address = $2, country = $3, state = $4, daily_capacity = $5, about = $6, availability = $7, test_types = $8, price_per_test = $9 WHERE center_id = $10`
+	_, err := Db.Exec(Ctx, query, payload.CentreName, payload.Address, payload.Country, payload.State, payload.DailyCapacity, payload.About, payload.Availability, payload.TestType, payload.Price, payload.CentreID)
+	if err != nil {
+		log.Println("Failed to update test center:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Test center updated successfully"}, nil
+}
+
+func (AdminServer) GetReviews(payload models.Getreviews) (any, error) {
+	var reviews []models.Reviews
+
+	rows, err := Db.Query(Ctx, "SELECT review_id, usertag, doctor_tag, review, star_rating,  status FROM reviews WHERE status = $1", payload.Status)
+	if err != nil {
+		log.Println("Failed to fetch reviews:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var review models.Reviews
+		if err := rows.Scan(&review.ReviewID, &review.UserTag, &review.DoctorTag, &review.Review, &review.Rating, &review.Status); err != nil {
+			log.Println("Failed to scan review:", err)
+			return nil, errors.New(responses.SOMETHING_WRONG)
+		}
+		reviews = append(reviews, review)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("Error iterating over reviews:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return reviews, nil
+}
+
+func (AdminServer) GetReviewByID(reviewID string) (any, error) {
+	var review models.Reviews
+	err := Db.QueryRow(Ctx, "SELECT review_id, usertag, doctor_tag, review, star_rating, status FROM reviews WHERE review_id = $1", reviewID).
+		Scan(&review.ReviewID, &review.UserTag, &review.DoctorTag, &review.Review, &review.Rating, &review.Status)
+	if err != nil {
+		log.Println("Failed to fetch review by ID:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("review not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+
+	return review, nil
+}
+
+func (AdminServer) DeleteReview(reviewID string) error {
+	_, err := Db.Exec(Ctx, "DELETE FROM reviews WHERE review_id = $1", reviewID)
+	if err != nil {
+		log.Println("Failed to delete review:", err)
+		return errors.New(responses.SOMETHING_WRONG)
+	}
+	return nil
+}
+
+func (AdminServer) GetAdminProfile(AdminTag string) (any, error) {
+	var admin models.AdminProfile
+
+	err := Db.QueryRow(Ctx, "SELECT email, firstname, lastname, profile_pic_url from admins WHERE admintag = $1", AdminTag).Scan(&admin.Email, &admin.Firstname, &admin.Lastname, &admin.ProfilePicURL)
+	if err != nil {
+		log.Println("Failed to fetch admin profile:", err)
+		if err.Error() == "no rows in result set" {
+			return nil, errors.New("admin not found")
+		}
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return admin, nil
+}
+
+func (AdminServer) UpdateAdminProfile(data models.AdminProfile) (any, error) {
+
+	query := `UPDATE admins SET firstname = $1, lastname = $2, profile_pic_url = $3 , email = $4 where admintag = $5`
+	_, err := Db.Exec(Ctx, query, data.Firstname, data.Lastname, data.ProfilePicURL, data.Email, data.AdminTag)
+	if err != nil {
+		log.Println("Failed to update admin profile:", err)
+		return nil, errors.New(responses.SOMETHING_WRONG)
+	}
+	return map[string]string{"message": "Admin profile updated successfully"}, nil
+}
+
+//sending push notifications to users and admins logic will be inputed here

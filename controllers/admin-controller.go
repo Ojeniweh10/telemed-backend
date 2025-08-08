@@ -441,3 +441,168 @@ func (AdminController) UpdateInventory(c *fiber.Ctx) error {
 	}
 	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
 }
+
+func (AdminController) FetchOrders(c *fiber.Ctx) error {
+	res, err := adminServer.GetOrders()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchOrderByID(c *fiber.Ctx) error {
+	orderID := c.Params("order_id")
+	if orderID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetOrderByID(orderID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) UpdateOrder(c *fiber.Ctx) error {
+	var payload models.Orders
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.OrderID = c.Params("order_id")
+	if payload.OrderID == "" || payload.Status == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdateOrder(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (AdminController) FetchTestCenters(c *fiber.Ctx) error {
+	res, err := adminServer.GetTestCenters()
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchTestCenterByID(c *fiber.Ctx) error {
+	testCenterID := c.Params("test_center_id")
+	if testCenterID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetTestCenterByID(testCenterID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) CreateTestCenter(c *fiber.Ctx) error {
+	var payload models.TestCentre
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.CentreName == "" || payload.Address == "" || payload.Country == "" || payload.State == "" || payload.TestType == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.CreateTestCenter(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_CREATED, res, 201)
+}
+
+func (AdminController) DeleteCenter(c *fiber.Ctx) error {
+	testCenterID := c.Params("test_center_id")
+	if testCenterID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeleteTestCenter(testCenterID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+func (AdminController) UpdateTestCenter(c *fiber.Ctx) error {
+	var payload models.TestCentre
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.CentreID = c.Params("test_center_id")
+	if payload.CentreID == "" || payload.CentreName == "" || payload.Address == "" || payload.Country == "" || payload.State == "" || payload.TestType == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdateTestCenter(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}
+
+func (AdminController) FetchReviews(c *fiber.Ctx) error {
+	var payload models.Getreviews
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	if payload.Status == "" || payload.Status != "approved" && payload.Status != "pending" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetReviews(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) FetchReviewByID(c *fiber.Ctx) error {
+	reviewID := c.Params("review_id")
+	if reviewID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetReviewByID(reviewID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) DeleteReview(c *fiber.Ctx) error {
+	reviewID := c.Params("review_id")
+	if reviewID == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	err := adminServer.DeleteReview(reviewID)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, nil, 200)
+}
+
+func (AdminController) FetchAdminProfile(c *fiber.Ctx) error {
+	AdminTag := c.Get("admintag")
+	if AdminTag == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.GetAdminProfile(AdminTag)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_FETCHED, res, 200)
+}
+
+func (AdminController) UpdateAdminProfile(c *fiber.Ctx) error {
+	var payload models.AdminProfile
+	if err := c.BodyParser(&payload); err != nil {
+		return responses.ErrorResponse(c, responses.BAD_DATA, 400)
+	}
+	payload.AdminTag = c.Get("admintag")
+	if payload.AdminTag == "" || payload.Firstname == "" || payload.Lastname == "" || payload.Email == "" {
+		return responses.ErrorResponse(c, responses.INCOMPLETE_DATA, 400)
+	}
+	res, err := adminServer.UpdateAdminProfile(payload)
+	if err != nil {
+		return responses.ErrorResponse(c, err.Error(), 400)
+	}
+	return responses.SuccessResponse(c, responses.DATA_UPDATED, res, 200)
+}

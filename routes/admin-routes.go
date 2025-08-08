@@ -57,7 +57,24 @@ func AdminRoutes(app *fiber.App) {
 	api.Post("/inventory", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.CreateInventory)
 	api.Delete("/inventory/:inventory_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeleteInventory)
 	api.Patch("/inventory/:inventory_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateInventory)
-	//users
+	//orders
+	api.Get("/orders", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchOrders)
+	api.Get("/orders/:order_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchOrderByID)
+	api.Put("/orders/:order_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateOrder)
+	//test center
+	api.Get("/test-centers", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchTestCenters)
+	api.Get("/test-centers/:test_center_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchTestCenterByID)
+	api.Post("/test-centers", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.CreateTestCenter)
+	api.Delete("/test-centers/:test_center_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeleteCenter)
+	api.Patch("/test-centers/:test_center_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateTestCenter)
+	//reviews
+	api.Get("/reviews", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchReviews)
+	api.Get("/reviews/:review_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchReviewByID)
+	api.Delete("/reviews/:review_id", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.DeleteReview)
+	//admin profile
+	api.Get("/profile", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchAdminProfile)
+	api.Patch("/profile", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateAdminProfile)
+	//admin analytics
 }
 
 func roleMiddleware(allowedRoles ...string) fiber.Handler {

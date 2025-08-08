@@ -178,3 +178,45 @@ type Inventory struct {
 	Price             float64 `json:"price"`
 	Product_image_url string  `json:"product_image_url"`
 }
+
+type Orders struct {
+	OrderID  string `json:"order_id"`
+	UserTag  string `json:"usertag"`
+	ItemName string `json:"item_name"`
+	Quantity int    `json:"quantity"`
+	Status   string `json:"status"`
+}
+
+type TestCentre struct {
+	CentreID      string         `json:"centre_id"`
+	CentreName    string         `json:"centre_name"`
+	Address       string         `json:"address"`
+	Country       string         `json:"country"`
+	State         string         `json:"state"`
+	DailyCapacity int            `json:"daily_capacity"`
+	About         string         `json:"about"`
+	Availability  datatypes.JSON `json:"availability"`
+	TestType      string         `json:"test_type"`
+	Price         float64        `json:"price"`
+}
+
+type Reviews struct {
+	ReviewID  string `json:"review_id"`
+	UserTag   string `json:"usertag"`
+	DoctorTag string `json:"doctortag"`
+	Review    string `json:"review"`
+	Rating    int    `json:"rating"`
+	Status    string `json:"status"`
+}
+
+type Getreviews struct {
+	Status string `json:"status"`
+}
+
+type AdminProfile struct {
+	AdminTag      string `json:"admintag"`
+	Firstname     string `json:"firstname"`
+	Lastname      string `json:"lastname"`
+	Email         string `json:"email"`
+	ProfilePicURL string `json:"profile_pic"`
+}
