@@ -74,7 +74,6 @@ func AdminRoutes(app *fiber.App) {
 	//admin profile
 	api.Get("/profile", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.FetchAdminProfile)
 	api.Patch("/profile", roleMiddleware(Admin, God_eye), middleware.JWTProtected(), adminController.UpdateAdminProfile)
-	//admin analytics
 }
 
 func roleMiddleware(allowedRoles ...string) fiber.Handler {
